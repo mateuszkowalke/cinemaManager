@@ -4,11 +4,20 @@ const Screening = require('../models/screening');
 exports.screeningsGet = (req, res) => {
     Hall.findById(req.params.hall_id)
         .populate('screenings')
-        .then(doc => res.send(doc.screenings))
+        .then(doc => {
+            if (!doc) {
+                res.send(`No hall with id ${req.params.hall_id} found.`);
+            } else {
+                res.json(doc.screenings);
+            }
+        })
         .catch(err => console.error(err));
 };
 
 exports.screeningPost = (req, res) => {
+    if (!(req.body.film && req.body.beginning && req.body.end)) {
+        return res.send(`Couldn't save screening - need all data about screening to save.`)
+    }
     const newScreening = new Screening({
         film: req.body.film,
         beginning: req.body.beginning,
@@ -17,13 +26,20 @@ exports.screeningPost = (req, res) => {
     Hall.findById(req.params.hall_id)
         .populate('screenings')
         .then(doc => {
-            if (screeningsDontOverlap(doc, newScreening)) {
+            if (!doc) {
+                return { error: true, message: `No hall with id ${req.params.hall_id} found.` };
+            } else if (screeningsDontOverlap(doc, newScreening)) {
                 doc.screenings.push(newScreening);
-                doc.save();
-                newScreening.save();
-                res.send(`Successfully created new screening: ${newScreening.film}`)
+                return Promise.all([doc.save(), newScreening.save()]);
             } else {
-                return res.send(`Couldn't save the new screening - it collides with another one in this hall.`)
+                return { error: true, message: `Couldn't save the new screening - it collides with another one in this hall.` };
+            }
+        })
+        .then(result => {
+            if (result.error) {
+                res.send(result.message);
+            } else {
+                res.send(`Successfully created new screening: ${result[1].film}`)
             }
         })
         .catch(err => console.error(err));
@@ -31,52 +47,68 @@ exports.screeningPost = (req, res) => {
 
 exports.screeningGet = (req, res) => {
     Screening.findById(req.params.screening_id)
-        .then(doc => res.send(doc))
+        .then(doc => {
+            if (!doc) {
+                res.send(`No screening with id: ${req.params.screening_id} found.`);
+            } else {
+                res.json(doc);
+            }
+        })
         .catch(err => console.error(err));
 };
 
 exports.screeningPut = (req, res) => {
-
-    Hall.findById({ _id: req.body.hall })
-        .populate('screenings')
-        .exec((err, hall) => {
-            if (err) console.log(err);
-            if (!hall) res.send(`No hall with id ${req.body.hall} found`)
-            Screening.findById({ _id: req.params.screening_id })
-                .populate('hall')
-                .exec((err, doc) => {
-                    if (err) console.log(err);
-                    if (!doc) return res.send(`No screening with id ${req.body.screening_id} found`);
-                    const beginning = new Date(req.body.beginning);
-                    const end = new Date(req.body.end);
-                    if (hall.screenings.every((screening) => screening.beginning >= end || screening.end <= beginning)) {
-                        const oldHall = doc.hall;
-                        doc.film = req.body.film;
-                        doc.beginning = req.body.beginning;
-                        doc.end = req.body.end;
-                        doc.hall = req.body.hall;
-                        hall.screenings.push(doc);
-                        hall.save()
-                            .then(doc.save((err, doc) => {
-                                if (err) console.log(err);
-                                res.redirect(`/api/screening/${req.params.screening_id}`)
-                            }))
-                            .then(Hall.findById(oldHall)
-                                .then((old) => old.screenings.pull(doc.id)))
-                    } else {
-                        res.send(`Couldn't save the new screening - it collides with another one in this hall.`)
-                    }
-                });
-
-        });
+    if (!(req.body.film && req.body.beginning && req.body.end)) {
+        return res.send(`Couldn't save screening - need all data about screening to save.`)
+    }
+    Screening.findById(req.params.screening_id)
+        .then(doc => {
+            if (!doc) {
+                return { error: true, message: `No screening with id: ${req.params.screening_id} found.` };
+            } else {
+                doc.film = req.body.film;
+                doc.beginning = req.body.beginning;
+                doc.end = req.body.end;
+                if (req.body.hall) {
+                    return Promise.all([
+                        Hall.findOne({ screenings: doc }),
+                        Hall.findById(req.body.hall).populate('screenings')
+                    ])
+                        .then(halls => {
+                            if (halls[0].id === halls[1].id) {
+                                return doc.save();
+                            } else if (screeningsDontOverlap(halls[1], doc)) {
+                                halls[0].screenings.pull(doc.id);
+                                halls[1].screenings.push(doc.id);
+                                return Promise.all([halls[0].save(), halls[1].save(), doc.save()]);
+                            } else {
+                                return { error: true, message: `Couldn't update screening - it collides with another one in the destination hall.` };
+                            }
+                        });
+                }
+                return doc.save();
+            }
+        })
+        .then(result => {
+            if (result.error) {
+                res.send(result.message);
+            } else {
+                res.send(`Successfully updated screening.`);
+            }
+        })
+        .catch(err => console.error(err));
 };
 
 exports.screeningDelete = (req, res) => {
-    //TODO pre delete hook to remove from hall (check if saving hall without object id deletes?)
-    Screening.findByIdAndDelete({ _id: req.params.screening_id }, (err, doc) => {
-        if (err) console.log(err);
-        res.redirect(`/api/halls/`);
-    })
+    Screening.findByIdAndDelete(req.params.screening_id)
+        .then(doc => {
+            if (!doc) {
+                res.send(`There's no screening with specified id.`);
+            } else {
+                res.send(`Successfully deleted screening.`)
+            }
+        })
+        .catch(err => console.error(err));
 };
 
 function screeningsDontOverlap(doc, newScreening) {

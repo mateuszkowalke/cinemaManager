@@ -24,8 +24,11 @@ module.exports = function (app) {
         .post(screeningController.screeningPost);
 
     app.route('/api/screening/:screening_id')
+        //get single screening
         .get(screeningController.screeningGet)
+        //edit screening -> to change screening's hall specify hall in request's body
         .put(screeningController.screeningPut)
+        //delete screening
         .delete(screeningController.screeningDelete);
 
 };

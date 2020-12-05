@@ -1,6 +1,4 @@
 const Hall = require('../models/hall');
-const Screening = require('../models/screening');
-
 
 exports.hallsGet = (req, res) => {
     Hall.find({})
@@ -9,6 +7,9 @@ exports.hallsGet = (req, res) => {
 };
 
 exports.hallPost = (req, res) => {
+    if (!req.body.name) {
+        return res.send(`Couldn't save hall - need all data about hall to save.`)
+    }
     const newHall = new Hall({
         name: req.body.name
     });
@@ -31,17 +32,25 @@ exports.hallGet = (req, res) => {
 };
 
 exports.hallPut = (req, res) => {
+    if (!req.body.name) {
+        return res.send(`Couldn't save hall - need all data about hall to save.`)
+    }
     Hall.findById(req.params.hall_id)
         .then(doc => {
             if (!doc) {
-                return `No hall with id ${req.params.hall_id} found.`;
+                return { error: true, message: `No hall with id ${req.params.hall_id} found.` };
             } else {
                 doc.name = req.body.name;
-                doc.save();
-                return `Successfully updated hall: ${doc.name}.`;
+                return doc.save();
             }
         })
-        .then(response => res.send(response))
+        .then(result => {
+            if (result.error) {
+                res.send(result.message);
+            } else {
+                res.send(`Successfully updated hall: ${result.name}.`);
+            }
+        })
         .catch(err => console.error(err));
 };
 
@@ -50,15 +59,20 @@ exports.hallDelete = (req, res) => {
         .populate('screenings')
         .then(doc => {
             if (!doc) {
-                return `There's no hall with specified id.`;
+                return { error: true, message: `There's no hall with specified id.` };
             } else if (hasCollidingScreenings(doc)) {
-                return `Can't delete hall - it has future screenings.`;
+                return { error: true, message: `Can't delete hall - it has future screenings.` };
             } else {
-                doc.deleteOne();
-                return `Successfully deleted hall.`;
+                return doc.deleteOne();
             }
         })
-        .then(response => res.send(response))
+        .then(result => {
+            if (result.error) {
+                res.send(result.message);
+            } else {
+                res.send(`Successfully deleted hall.`);
+            }
+        })
         .catch(err => console.error(err));
 };
 
