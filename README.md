@@ -1,75 +1,147 @@
+# cinemaManager REST API example application
 
-# cinemaManager
+Simple test app.
 
+## Install
 
-GET
-http://localhost:3000/api/halls
-http://localhost:3000/api/halls
-Retrieves list of all cinema halls
+    npm install
 
-POST
-http://localhost:3000/api/halls
-http://localhost:3000/api/halls
-Saves a new hall. Needs to specify value for key 'name' in the request body.
+## Run the app
 
-Bodyurlencoded
-name
-hall2
-GET
-http://localhost:3000/api/hall/5fca38af9fe6c808e2cd4e77
-http://localhost:3000/api/hall/5fca38af9fe6c808e2cd4e77
-Saves a new screening for a hall specified with hall id. Needs to specify values for keys 'film', 'beginning' and 'end' in the request body.
+    node server.js
+By default runs on port 3000
 
-PUT
-http://localhost:3000/api/hall/5fcb513a764c6e02f46bc3f0
-http://localhost:3000/api/hall/5fcb513a764c6e02f46bc3f0
-Updates a hall specified with hall id. Needs to specify value for key 'name' in the request body.
+## Run the tests
 
-Bodyurlencoded
-name
-hall2
-DEL
-http://localhost:3000/api/hall/5fcb5111764c6e02f46bc3ef
-http://localhost:3000/api/hall/5fcb5111764c6e02f46bc3ef
-Deletes hall specified with hall id.
+    npm test
 
-GET
-http://localhost:3000/api/screenings/5fca38af9fe6c808e2cd4e77
-http://localhost:3000/api/screenings/5fca38af9fe6c808e2cd4e77
-Retrieves a list of all screening for a hall specified with hall id.
+# Login information
 
-POST
-http://localhost:3000/api/screenings/5fca38af9fe6c808e2cd4e77
-http://localhost:3000/api/screenings/5fca38af9fe6c808e2cd4e77
-Saves a new screening for a hall specified with hall id. Needs to specify values for keys 'film', 'beginning', 'end' in the request body.
+To register a new user specify keys 'username' and 'password' in the request's body.
 
-Bodyurlencoded
-film
-film3
-beginning
-2020-12-5 10:00
-end
-2020-12-5 12:00
-GET
-http://localhost:3000/api/screening/5fcb51c9764c6e02f46bc3f1
-http://localhost:3000/api/screening/5fcb51c9764c6e02f46bc3f1
-Retrieves all data for screening specified with screening id.
+`POST /api/register/`
 
-PUT
-http://localhost:3000/api/screening/5fcb51c9764c6e02f46bc3f1
-http://localhost:3000/api/screening/5fcb51c9764c6e02f46bc3f1
-Updates a screening specified with screening id. Needs to specify value for key 'name' in the request body. If body has a value (hall id) for key 'hall', which is different than the screening is assigned to, then the screening will be moved to specified hall.
+Then you can use the same credentials sending them the same keys to log in.
 
-Bodyurlencoded
-hall
-5fca38af9fe6c808e2cd4e77
-film
-film3
-beginning
-2020-12-05 10:00
-end
-2020-12-05 12:00
-DEL
-http://localhost:3000/api/screening/5fca87a81810f10d2801832a
-http://localhost:3000/api/screening/5fca87a81810f10d2801832a
-Deletes screening specified with screening id.
+`POST /api/login/`
+
+# REST API
+
+The REST API to the example app is described below.
+All POST, PUT and DELETE routes require user to be logged in.
+
+## Get list of halls
+
+### Request
+
+`GET /api/halls/`
+
+### Response
+
+    JSON containing list of all halls
+
+## Create a new hall
+
+### Request
+
+`POST /api/halls/`
+
+Value for key 'name' has to be specified in the request's body.
+
+### Response
+
+    "Successfully created new hall: hall_name."
+
+## Get a specific hall
+
+### Request
+
+`GET /api/hall/hall_id`
+
+### Response
+
+    JSON containing specified hall
+
+## Edit hall
+
+### Request
+
+`PUT /api/hall/hall_id`
+
+Value for key 'name' has to be specified in the request's body.
+
+### Response
+
+    "Successfully updated hall: hall_name."
+
+## Delete a hall
+
+### Request
+
+`DELETE /api/hall/hall_id`
+
+Deletes the hall only if there are no future or present screenings assigned to it.
+
+### Response
+
+    Successfully deleted hall.
+
+## Get list of screenings
+
+### Request
+
+`GET /api/screenings/hall_id`
+
+### Response
+
+    JSON containing list of all screenings for specified hall
+
+## Create a new screening
+
+### Request
+
+`POST /api/screenings/hall_id`
+
+Values for keys 'film', 'beginning' and 'end' have to be specified in the request's body.
+
+Screenings for one hall can't overlap.
+
+### Response
+
+    "Successfully created new screening: screening_film."
+
+## Get a specific screening
+
+### Request
+
+`GET /api/screening/screening_id`
+
+### Response
+
+    JSON containing specified screening
+
+## Edit screening
+
+### Request
+
+`PUT /api/screening/screening_id`
+
+Values for keys 'film', 'beginning' and 'end' have to be specified in the request's body.
+
+To change screening's hall, value for key 'hall' has to be specified in the request's body.
+
+Screenings for one hall can't overlap.
+
+### Response
+
+    "Successfully updated screening: screening_name."
+
+## Delete a screening
+
+### Request
+
+`DELETE /api/screening/screening_id`
+
+### Response
+
+    Successfully deleted screening.

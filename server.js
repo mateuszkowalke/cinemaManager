@@ -1,16 +1,12 @@
 //imports
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv").config();
 const bodyParser = require("body-parser");
 const apiRoutes = require('./routes/api.js');
 const authRoutes = require('./routes/auth.js');
 
-//instantiate express server
 const app = express();
-
-//load .env
-dotenv.config();
 
 //setup database connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });

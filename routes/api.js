@@ -1,6 +1,6 @@
 const hallController = require('../controllers/hall_controller');
 const screeningController = require('../controllers/screening_controller');
-const { verifyToken } = require('../utils/verify_token');
+const verifyToken = require('../utils/verify_token');
 
 module.exports = function (app) {
 

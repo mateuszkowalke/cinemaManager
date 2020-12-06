@@ -48,7 +48,7 @@ exports.login = (req, res) => {
             if (result.error) {
                 res.send(result.message);
             } else {
-                const token = jwt.sign({ id: result.id }, process.env.SECRET_KEY);
+                const token = jwt.sign({ username: req.body.username }, process.env.SECRET_KEY);
                 res.header('auth-token', token).send(`Successfully logged in.`);
             }
         })
