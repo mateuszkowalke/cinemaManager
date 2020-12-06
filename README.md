@@ -1,5 +1,7 @@
-#cinemaManager
-Make things easier for your teammates with a complete collection description.
+
+# cinemaManager
+
+
 GET
 http://localhost:3000/api/halls
 http://localhost:3000/api/halls
