@@ -148,3 +148,9 @@ Screenings for one hall can't overlap.
 ### Response
 
     Successfully deleted screening.
+
+# Testing
+
+Needs local mongodb database. To run use:
+
+    npm test

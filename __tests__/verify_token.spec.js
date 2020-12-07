@@ -10,7 +10,7 @@ describe("Function verifyToken", () => {
             mockResponse({ send: (message) => message }),
             () => 'fired next middleware'
         ];
-        const output = `No JWT token - access denied`;
+        const output = `No JWT token - access denied.`;
         expect(verifyToken(...input)).toEqual(output);
     });
     test("it should fail with bad token in the header", () => {
