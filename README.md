@@ -9,7 +9,10 @@ Simple test app.
 ## Run the app
 
     node server.js
-By default runs on port 3000
+
+By default runs on port 3000.
+
+You need to specify your mongodb database url as MONGO_URI and secret key for JWT as SECRET_KEY in a .env file.
 
 ## Run the tests
 
